@@ -8,7 +8,7 @@ client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 def handler(request):
     try:
         # Parse the incoming JSON request
-        body = json.loads(request.body)
+        body = json.loads(request.body or "{}")
         prompt = body.get("prompt", "").strip()
         if not prompt:
             return {"statusCode": 400, "body": json.dumps({"error": "Prompt is required."})}
@@ -29,4 +29,7 @@ def handler(request):
         }
 
     except Exception as e:
-        return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": str(e)})
+        }
