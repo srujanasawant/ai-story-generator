@@ -3,5 +3,5 @@ def handler(request):
     return {
         "statusCode": 200,
         "headers": {"Content-Type": "text/html"},
-        "body": open("static/index.html").read()
+        "body": open("index.html").read()
     }
