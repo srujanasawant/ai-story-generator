@@ -1,35 +1,24 @@
-import json
 import os
-from google import genai
+import json
+import google.generativeai as genai
 
-# Initialize the GenAI client
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 
 def handler(request):
     try:
-        # Parse the incoming JSON request
-        body = json.loads(request.body or "{}")
-        prompt = body.get("prompt", "").strip()
+        body_text = request.body.decode("utf-8") if request.body else "{}"
+        data = json.loads(body_text)
+        prompt = data.get("prompt", "").strip()
         if not prompt:
-            return {"statusCode": 400, "body": json.dumps({"error": "Prompt is required."})}
+            return {"statusCode": 400, "body": json.dumps({"error": "Prompt is required"})}
 
-        # Generate content using the Gemini API
-        response = client.models.generate_content(
-            model="gemini-2.5-flash", contents=[prompt]
-        )
-
-        # Extract the generated story text
-        story = response.text.strip()
-        if not story:
-            return {"statusCode": 500, "body": json.dumps({"error": "Failed to generate story."})}
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        response = model.generate_content(prompt)
 
         return {
             "statusCode": 200,
-            "body": json.dumps({"story": story})
+            "body": json.dumps({"story": response.text})
         }
 
     except Exception as e:
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"error": str(e)})
-        }
+        return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
