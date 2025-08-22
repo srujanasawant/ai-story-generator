@@ -1,29 +1,32 @@
-import os
 import json
-import google.generativeai as genai
+import os
+from google import genai
 
-# Vercel serverless function handler
-def handler(request, response):
+# Initialize the GenAI client
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+
+def handler(request):
     try:
-        # Parse request body
-        body = request.get_json()
-        prompt = body.get("prompt", "")
-
+        # Parse the incoming JSON request
+        body = json.loads(request.body)
+        prompt = body.get("prompt", "").strip()
         if not prompt:
-            response.status_code = 400
-            response.send(json.dumps({"error": "Prompt is required"}))
-            return
+            return {"statusCode": 400, "body": json.dumps({"error": "Prompt is required."})}
 
-        # Configure Gemini
-        genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        result = model.generate_content(prompt)
+        # Generate content using the Gemini API
+        response = client.models.generate_content(
+            model="gemini-2.5-flash", contents=[prompt]
+        )
 
-        # Return story
-        response.status_code = 200
-        response.headers["Content-Type"] = "application/json"
-        response.send(json.dumps({"story": result.text}))
+        # Extract the generated story text
+        story = response.text.strip()
+        if not story:
+            return {"statusCode": 500, "body": json.dumps({"error": "Failed to generate story."})}
+
+        return {
+            "statusCode": 200,
+            "body": json.dumps({"story": story})
+        }
 
     except Exception as e:
-        response.status_code = 500
-        response.send(json.dumps({"error": str(e)}))
+        return {"statusCode": 500, "body": json.dumps({"error": str(e)})}
