@@ -1,5 +1,5 @@
 def handler(request):
-    # Redirect to index.html in static
+    # Redirect to index.html
     return {
         "statusCode": 200,
         "headers": {"Content-Type": "text/html"},
